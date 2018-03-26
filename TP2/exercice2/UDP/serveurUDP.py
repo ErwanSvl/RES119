@@ -39,5 +39,4 @@ print "message reçut : " + message_em + " de : " + str(adress_em)
 
 message_rec, adress_rec = s.recvfrom(50)
 s.sendto(message_em, adress_rec)
-print "message envoyé : " + message_em + " à : " + str(adress_rec
-                                                       )
+print "message envoyé : " + message_em + " à : " + str(adress_rec)

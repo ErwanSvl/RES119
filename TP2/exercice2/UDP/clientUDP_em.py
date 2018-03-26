@@ -34,8 +34,6 @@ for opt, arg in opts:
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # init socket
 
-s.connect((SERVER_HOST, SERVER_PORT))  # connection to the server
-
 # sending a message to the server
 s.sendto(MESSAGE, (SERVER_HOST, SERVER_PORT))
 print "Message envoyé : " + MESSAGE + " à : " + str((SERVER_HOST, SERVER_PORT))
