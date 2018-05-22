@@ -3,10 +3,9 @@ import ctypes
 import struct
 import argparse
 import socket
-import encode_frame
-import send_frame
+import frame_manager
 
-def connection(socket, adress):
+def connectionRequest(socket, adress):
 	""" Client connect to the server """
 	print "Entrez votre nom d'utilisateur :"
 	username = raw_input()

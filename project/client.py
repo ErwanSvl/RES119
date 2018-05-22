@@ -2,7 +2,6 @@
 import ctypes
 import struct
 import argparse
-import log
 import socket
 import connection
 import frame_manager
