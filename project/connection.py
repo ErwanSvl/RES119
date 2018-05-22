@@ -7,11 +7,12 @@ import frame_manager
 import settings
 
 
-def connectionRequest(socket, adress):
+def connectionRequest(socket, adress, _id):
 	""" Client connect to the server """
 	print "Entrez votre nom d'utilisateur :"
 	username = raw_input()
 	username = username.strip()
+	usernameNoSpace = username
 	
 	#Verify that username is shorter than or equal to 10 characters and longer than 0
 	while(len(username) > 10) or (len(username) < 1):
@@ -23,9 +24,10 @@ def connectionRequest(socket, adress):
 			username += " "
 	
 	#Encode the frame before sending
-	buf = frame_manager.encode_frame(1, 0, username, 0, 1, 0, 0, "")
+	buf = frame_manager.encode_frame(_id, 0, username, 0, 1, 0, 0, "")
 	#Send the encoding frame
 	frame_manager.send_frame(socket, adress, buf)
+	return usernameNoSpace
 
 
 def connectionAnswer(socket, adress, username):

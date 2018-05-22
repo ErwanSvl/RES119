@@ -1,4 +1,4 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 import ctypes
 import struct
 import argparse
@@ -32,13 +32,13 @@ def send_frame_public(socket, adress, buf):
     for user in settings.CLIENTS_CONNECTED:
         frame = decode_frame(buf)  # the ID have to change so we need to decode
 
-		if user[0] > settings.MAX_ID:  # incremente the ID
-			user[0] = 1
-		else
+        if user[0] > settings.MAX_ID:  # incremente the ID
+            user[0] = 1
+        else:
             user[0] += 1
-			
+
         updated_buf = encode_frame(user[0], frame["type"], frame["username"], frame["zone"],
-                                   frame["state"], frame["ack_state"], frame["error_state"], frame["date"])
+                                   frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
         if user[1] != adress:
             send_frame(socket, user[1], updated_buf)
 
