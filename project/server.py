@@ -4,19 +4,35 @@ import struct
 import argparse
 import socket
 import frame_manager
+import connection
+import settings
 
-HOST = "localhost"
-PORT = 1212
+POWER_ON = True
+
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-s.bind((HOST, PORT))
-message, adress = s.recvfrom(1415)
-print "message recu! :"
-frame = frame_manager.decode_frame(message)
-print "		ID : "+str(frame["id"])
-print "		TYPE : "+str(frame["type"])
-print "		UTILISATEUR : "+str(frame["username"])
-print "		ZONE : "+str(frame["zone"])
-print "		STATE : "+str(frame["state"])
-print "		ACK STATE : "+str(frame["ack_state"])
-print "		ERREUR STATE : "+str(frame["error_state"])
-print "		DATA : "+str(frame["data"])
+s.bind((settings.HOST, settings.PORT))
+
+while POWER_ON :
+	buf, adress = s.recvfrom(settings.FRAME_LENGTH)
+	frame = frame_manager.decode_frame(buf)
+	frame_manager.print_frame(frame)
+	if frame["type"] == 0 : # Data frame
+		if frame["zone"] == 0 : # Public canal
+			if frame["state"] == 0 : # Default (Message)
+				print "Empty"
+			elif frame["state"] == 1 : # Connection
+				connection.connectionAnswer(s, adress, frame["username"])
+			elif frame["state"] == 2 : # Deconnection
+				print "Empty"
+			elif frame["state"] == 3 : # Server command
+				print "Empty"
+			else : # Bad entry
+				print "Empty"
+		elif frame["zone"] == 1 : # Centralized private canal
+			print "Empty"
+		elif frame["zone"] == 2 : # Decentralized private canal
+			print "Empty"
+		else : # Bad entry zone parameter
+			print "Empty"
+	else : # Ack frame
+		print 'Empty'

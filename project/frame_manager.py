@@ -20,9 +20,15 @@ def encode_frame(_id, _type, username, zone, state, ack_state, error_state, data
 	
 	
 def send_frame(socket, adress, buf):
-	""" Send a frame with parameters encoded to the adress """
+	""" Send a frame with parameters encoded to the server"""
 	# send the buffer
 	socket.sendto(buf, adress)
+	
+	
+def send_frame_public(socket, adress, buf):
+	""" Send a frame with parameters encoded to all the connected clients except the sender """
+	# send the buffer      A FINIR
+	#socket.sendto(buf, adress)
 
 
 def decode_frame(buf):
@@ -45,3 +51,14 @@ def decode_frame(buf):
 	frame["data"] = struct.unpack(str(data_size) + "s", buf[15:(15 + data_size)])[0]
 	#logger.info("//ID:"+str(frame["id"])+"//TYPE:"+str(frame["type"])+"//UTILISATEUR:"+str(frame["username"])+"//ZONE:"+str(frame["zone"])+"//STATE:"+str(frame["state"])+"//ACK STATE:"+str(frame["ack_state"])+"//ERREUR STATE:"+str(frame["error_state"])+"//DATA:"+str(frame["data"]))
 	return frame
+
+
+def print_frame(frame) :
+	print "		ID : "+str(frame["id"])
+	print "		TYPE : "+str(frame["type"])
+	print "		UTILISATEUR : "+str(frame["username"])
+	print "		ZONE : "+str(frame["zone"])
+	print "		STATE : "+str(frame["state"])
+	print "		ACK STATE : "+str(frame["ack_state"])
+	print "		ERREUR STATE : "+str(frame["error_state"])
+	print "		DATA : "+str(frame["data"])
