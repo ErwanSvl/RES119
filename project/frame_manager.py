@@ -81,7 +81,7 @@ def get_user(adress):
 
 
 def incremente_id(ID) :
-	if ID > settings.MAX_ID :
+	if ID >= settings.MAX_ID :
 		return 1
 	else :
 		return ID + 1

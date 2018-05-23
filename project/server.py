@@ -21,7 +21,7 @@ while POWER_ON:
             if frame["state"] == 0:  # Default (Message)
                 frame_manager.send_frame_public(s, adress, buf)
             elif frame["state"] == 1:  # Connection
-                connection.connectionAnswer(s, adress, frame["username"], frame["id"])
+                connection.connectionAnswer(s, adress, frame["username"], frame["id"] + 1)
             elif frame["state"] == 2:  # Deconnection
                 print "Empty"
             elif frame["state"] == 3:  # Server command
