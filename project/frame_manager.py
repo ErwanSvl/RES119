@@ -32,20 +32,12 @@ def send_frame_public(socket, adress, buf):
     for user in settings.CLIENTS_CONNECTED:
         frame = decode_frame(buf)  # the ID have to change so we need to decode
 
-        if user[0] > settings.MAX_ID:  # incremente the ID
-            user[0] = 1
-        else:
-            user[0] += 1
+        user[2] = incremente_id(user[2])  # incremente the ID
 
-        updated_buf = encode_frame(user[0], frame["type"], frame["username"], frame["zone"],
+        updated_buf = encode_frame(user[2], frame["type"], frame["username"], frame["zone"],
                                    frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
         if user[1] != adress:
             send_frame(socket, user[1], updated_buf)
-        else:
-            if user[0] > settings.MAX_ID:  # incremente the ID
-                user[0] = 1
-            else:
-                user[0] += 1
 
 
 def decode_frame(buf):
@@ -79,9 +71,17 @@ def print_frame(frame):
     print "		ACK STATE : "+str(frame["ack_state"])
     print "		ERREUR STATE : "+str(frame["error_state"])
     print "		DATA : "+str(frame["data"])
+    print "---------------------------------------------------------"
 
 
 def get_user(adress):
     for user in settings.CLIENTS_CONNECTED:
         if user[1] == adress:
             return user
+
+
+def incremente_id(ID) :
+	if ID > settings.MAX_ID :
+		return 1
+	else :
+		return ID + 1

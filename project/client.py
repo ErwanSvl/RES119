@@ -50,7 +50,8 @@ while(POWER_ON) :
 	if childPID == 0 :
 		buf, adresse = s.recvfrom(settings.FRAME_LENGTH)
 		frame = frame_manager.decode_frame(buf)
-		print str(frame["username"])+" : "+frame["data"]
+		frame_manager.print_frame(frame)
+		#print str(frame["username"])+" : "+frame["data"]
 
 	else :
 		msg = raw_input()
@@ -60,12 +61,9 @@ while(POWER_ON) :
 			os.kill(childPID, 9)
 			POWER_ON = False
 		else:
+			ID = frame_manager.incremente_id(ID)
 			buf = frame_manager.encode_frame(ID, 0, username, 0, 0, 0, 0, msg)
 			frame_manager.send_frame(s, adress, buf)
-			if ID > settings.MAX_ID :
-				ID = 1
-			else :
-				ID = ID + 1
 
 print "Disconnected"
 
