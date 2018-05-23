@@ -41,6 +41,11 @@ def send_frame_public(socket, adress, buf):
                                    frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
         if user[1] != adress:
             send_frame(socket, user[1], updated_buf)
+        else:
+            if user[0] > settings.MAX_ID:  # incremente the ID
+                user[0] = 1
+            else:
+                user[0] += 1
 
 
 def decode_frame(buf):
@@ -62,7 +67,6 @@ def decode_frame(buf):
 
     frame["data"] = struct.unpack(
         str(data_size) + "s", buf[15:(15 + data_size)])[0]
-    # logger.info("//ID:"+str(frame["id"])+"//TYPE:"+str(frame["type"])+"//UTILISATEUR:"+str(frame["username"])+"//ZONE:"+str(frame["zone"])+"//STATE:"+str(frame["state"])+"//ACK STATE:"+str(frame["ack_state"])+"//ERREUR STATE:"+str(frame["error_state"])+"//DATA:"+str(frame["data"]))
     return frame
 
 
@@ -75,3 +79,9 @@ def print_frame(frame):
     print "		ACK STATE : "+str(frame["ack_state"])
     print "		ERREUR STATE : "+str(frame["error_state"])
     print "		DATA : "+str(frame["data"])
+
+
+def get_user(adress):
+    for user in settings.CLIENTS_CONNECTED:
+        if user[1] == adress:
+            return user

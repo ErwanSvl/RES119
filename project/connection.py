@@ -30,21 +30,21 @@ def connectionRequest(socket, adress, _id):
 	return usernameNoSpace
 
 
-def connectionAnswer(socket, adress, username):
+def connectionAnswer(socket, adress, username, _id):
 	
 	if len(settings.CLIENTS_CONNECTED) == settings.MAX_CLIENTS : # Number max is reached
-		buf = frame_manager.encode_frame(2, 0, "server", 0, 1, 2, 2, "")
+		buf = frame_manager.encode_frame(_id, 0, "server", 0, 1, 2, 2, "")
 		frame_manager.send_frame(socket, adress, buf)
 		return
 		
 	for client in settings.CLIENTS_CONNECTED : # Verify the username is not used
 		if username == client[0] :
-			buf = frame_manager.encode_frame(2, 0, "server", 0, 1, 2, 1, "")
+			buf = frame_manager.encode_frame(_id, 0, "server", 0, 1, 2, 1, "")
 			frame_manager.send_frame(socket, adress, buf)
 			return
 	
-	settings.CLIENTS_CONNECTED.append([username, adress, 2])
-	buf = frame_manager.encode_frame(2, 0, "server", 0, 1, 1, 0, "")
+	settings.CLIENTS_CONNECTED.append([username, adress, _id])
+	buf = frame_manager.encode_frame(_id, 0, "server", 0, 1, 1, 0, "")
 	frame_manager.send_frame(socket, adress, buf)
 	
 	
