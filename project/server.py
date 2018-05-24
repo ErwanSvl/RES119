@@ -8,6 +8,7 @@ import connection
 import settings
 
 POWER_ON = True
+current_id = 0
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((settings.HOST, settings.PORT))
@@ -19,9 +20,10 @@ while POWER_ON:
     if frame["type"] == 0:  # Data frame
         if frame["zone"] == 0:  # Public canal
             if frame["state"] == 0:  # Default (Message)
-                frame_manager.send_frame_public(s, adress, buf)
+                frame_manager.send_frame_public(s, adress, buf, current_id)
+                current_id = frame_manager.incremente_id(current_id)
             elif frame["state"] == 1:  # Connection
-                connection.connectionAnswer(s, adress, frame["username"], frame["id"] + 1)
+                connection.connectionAnswer(s, adress, frame["username"], frame["id"])
             elif frame["state"] == 2:  # Deconnection
                 print "Empty"
             elif frame["state"] == 3:  # Server command

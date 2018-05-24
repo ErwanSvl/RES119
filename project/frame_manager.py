@@ -27,17 +27,16 @@ def send_frame(socket, adress, buf):
     socket.sendto(buf, adress)
 
 
-def send_frame_public(socket, adress, buf):
+def send_frame_public(socket, adress, buf, _id):
     """ Send a frame with parameters encoded to all the connected clients except the sender """
+    frame = decode_frame(buf)  # the ID have to change so we need to decode
+    updated_buf = encode_frame(_id, frame["type"], frame["username"], frame["zone"],
+                               frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
     for user in settings.CLIENTS_CONNECTED:
-        frame = decode_frame(buf)  # the ID have to change so we need to decode
-
-        user[2] = incremente_id(user[2])  # incremente the ID
-
-        updated_buf = encode_frame(user[2], frame["type"], frame["username"], frame["zone"],
-                                   frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
         if user[1] != adress:
             send_frame(socket, user[1], updated_buf)
+        else:
+            user[2] = frame["id"]  # update the ID
 
 
 def decode_frame(buf):
@@ -80,8 +79,8 @@ def get_user(adress):
             return user
 
 
-def incremente_id(ID) :
-	if ID >= settings.MAX_ID :
-		return 1
-	else :
-		return ID + 1
+def incremente_id(ID):
+    if ID >= settings.MAX_ID:
+        return 1
+    else:
+        return ID + 1

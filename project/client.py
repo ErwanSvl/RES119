@@ -22,26 +22,25 @@ def testConnection(s, adress):
     print "Connexion Request"
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     adress = ("localhost", 1212)
-    connection.connectionRequest(s, adress, ID)
+    connection.connectionRequest(s, adress, current_id)
     buf, adress = s.recvfrom(settings.FRAME_LENGTH)
     frame = frame_manager.decode_frame(buf)
     frame_manager.print_frame(frame)
 
 
-ID = random.randint(1, 32767)
-CONNECTED = False
+current_id = random.randint(1, 32767)
+connected = False
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 adress = (settings.HOST, settings.PORT)
 
-while not CONNECTED:
-    username = connection.connectionRequest(s, adress, ID)
+while not connected:
+    username = connection.connectionRequest(s, adress, current_id)
     buf, adresse = s.recvfrom(settings.FRAME_LENGTH)
     frame = frame_manager.decode_frame(buf)
-    ID = frame_manager.incremente_id(ID)
     frame_manager.print_frame(frame)
     if frame["ack_state"] == 1:
-        CONNECTED = True
+        connected = True
     elif frame["error_state"] == 1:
         print "Echec de la connexion : votre login est déjà utilisé."
     elif frame["error_state"] == 2:
@@ -56,13 +55,11 @@ while(POWER_ON):
         if isinstance(event, file):  # The user is writing a message
             msg = sys.stdin.readline()
             # Incremente the ID before sending
-            ID = frame_manager.incremente_id(ID)
-            buf = frame_manager.encode_frame(ID, 0, username, 0, 0, 0, 0, msg)
+            current_id = frame_manager.incremente_id(current_id)
+            buf = frame_manager.encode_frame(current_id, 0, username, 0, 0, 0, 0, msg)
             frame_manager.send_frame(s, adress, buf)
         else:  # The user receiving a message
             buf, adresse = s.recvfrom(settings.FRAME_LENGTH)
             frame = frame_manager.decode_frame(buf)
-            # Incremente the ID if this is a data frame
-            ID = frame_manager.incremente_id(ID)
             frame_manager.print_frame(frame)
             print str(frame["username"])+" : "+frame["data"]
