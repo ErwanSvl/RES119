@@ -28,15 +28,18 @@ def send_frame(socket, adress, buf):
 
 
 def send_frame_public(socket, adress, buf, _id):
-    """ Send a frame with parameters encoded to all the connected clients except the sender """
+    """ Send a frame with parameters encoded to all the connected clients except the sender.
+    Return the final server id incremented"""
     frame = decode_frame(buf)  # the ID have to change so we need to decode
-    updated_buf = encode_frame(_id, frame["type"], frame["username"], frame["zone"],
-                               frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
     for user in settings.CLIENTS_CONNECTED:
+        updated_buf = encode_frame(_id, frame["type"], frame["username"], frame["zone"],
+                                   frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
         if user[1] != adress:
             send_frame(socket, user[1], updated_buf)
+            _id = incremente_id(_id)
         else:
             user[2] = frame["id"]  # update the ID
+    return _id
 
 
 def decode_frame(buf):

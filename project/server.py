@@ -20,21 +20,22 @@ while POWER_ON:
     if frame["type"] == 0:  # Data frame
         if frame["zone"] == 0:  # Public canal
             if frame["state"] == 0:  # Default (Message)
-                frame_manager.send_frame_public(s, adress, buf, current_id)
-                current_id = frame_manager.incremente_id(current_id)
+                current_id = frame_manager.send_frame_public(
+                    s, adress, buf, current_id)
             elif frame["state"] == 1:  # Connection
-                connection.connectionAnswer(s, adress, frame["username"], frame["id"])
+                connection.connectionAnswer(
+                    s, adress, frame["username"], frame["id"])
             elif frame["state"] == 2:  # Deconnection
-                print "Empty"
+                current_id = connection.deconnectionAnswer(s, adress, frame["username"], frame["id"], current_id)
             elif frame["state"] == 3:  # Server command
                 print "Empty"
             else:  # Bad entry
-                print "Empty"
+                print "Bad Entry"
         elif frame["zone"] == 1:  # Centralized private canal
-            print "Empty"
+            print "Not implemented yet"
         elif frame["zone"] == 2:  # Decentralized private canal
-            print "Empty"
+            print "Not implemented yet"
         else:  # Bad entry zone parameter
-            print "Empty"
+            print "Bad Entry"
     else:  # Ack frame
-        print 'Empty'
+        print 'Not implemented yet'
