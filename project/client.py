@@ -1,4 +1,4 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 import ctypes
 import struct
 import argparse
@@ -56,10 +56,34 @@ while(POWER_ON):
             msg = sys.stdin.readline()
             # Incremente the ID before sending
             current_id = frame_manager.incremente_id(current_id)
-            buf = frame_manager.encode_frame(current_id, 0, username, 0, 0, 0, 0, msg)
+			if msg[0] == "!":
+				if msg == "!quit":
+					buf = frame_manager.encode_frame(current_id, 0, username, 0, 2, 0, "")
+					frame_manager.send_frame(s, adress, buf)
+            buf = frame_manager.encode_frame(
+                current_id, 0, username, 0, 0, 0, 0, msg)
             frame_manager.send_frame(s, adress, buf)
         else:  # The user receiving a message
-            buf, adresse = s.recvfrom(settings.FRAME_LENGTH)
+            buf, adresse = s.recvfrom(settings.FRAME_LENGTH)incremente_id
             frame = frame_manager.decode_frame(buf)
-            frame_manager.print_frame(frame)
-            print str(frame["username"])+" : "+frame["data"]
+			if frame["type"] == 0:  # Data frame
+				if frame["zone"] == 0:  # Public canal
+					if frame["state"] == 0:  # Default (Message)
+						frame_manager.print_frame(frame)
+						print frame["username"]+" : "+frame["data"]
+					elif frame["state"] == 2:  # Deconnection
+						s.close()
+						print "Good bye !"
+						sys.exit()
+					elif frame["state"] == 3:  # Server command
+						print "Empty"
+					else:  # Bad entry
+						print "Empty"
+				elif frame["zone"] == 1:  # Centralized private canal
+					print "Empty"
+				elif frame["zone"] == 2:  # Decentralized private canal
+					print "Empty"
+				else:  # Bad entry zone parameter
+					print "Empty"
+			else:  # Ack frame
+				print 'Empty'
