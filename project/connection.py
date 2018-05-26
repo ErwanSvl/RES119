@@ -38,12 +38,23 @@ def connectionAnswer(socket, adress, username, _id):
         return
 
     for client in settings.CLIENTS_CONNECTED:  # Verify the username is not used
-        if username == client[0]:
+        if username == client["username"]:
             buf = frame_manager.encode_frame(_id, 0, "server", 0, 1, 2, 1, "")
             frame_manager.send_frame(socket, adress, buf)
             return
+    dic = {}
+    dic["username"] = username
+    dic["adress"] = adress
+    dic["id"] = _id
+    settings.CLIENTS_CONNECTED.append(dic)
 
-    settings.CLIENTS_CONNECTED.append([username, adress, _id])
+    dic = {}
+    dic["adress"] = adress
+    dic["timer"] = None
+    dic["nb_try"] = 0
+    dic["wait_msg"] = []
+    settings.SIG_ARRAY.append(dic)
+
     buf = frame_manager.encode_frame(_id, 0, "server", 0, 1, 1, 0, "")
     frame_manager.send_frame(socket, adress, buf)
 
@@ -51,7 +62,7 @@ def connectionAnswer(socket, adress, username, _id):
 def deconnectionAnswer(socket, adress, username, id_client, id_server):
 
     for client in settings.CLIENTS_CONNECTED:  # Verify the username is not used
-        if adress == client[1]:
+        if adress == client["adress"]:
             settings.CLIENTS_CONNECTED.remove(client)
             buf = frame_manager.encode_frame(
                 id_client, 0, "server", 0, 2, 1, 0, "")

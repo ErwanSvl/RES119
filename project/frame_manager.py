@@ -34,11 +34,11 @@ def send_frame_public(socket, adress, buf, _id):
     for user in settings.CLIENTS_CONNECTED:
         updated_buf = encode_frame(_id, frame["type"], frame["username"], frame["zone"],
                                    frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
-        if user[1] != adress:
-            send_frame(socket, user[1], updated_buf)
+        if user["adress"] != adress:
+            send_frame(socket, user["adress"], updated_buf)
             _id = incremente_id(_id)
         else:
-            user[2] = frame["id"]  # update the ID
+            user["id"] = frame["id"]  # update the ID
     return _id
 
 
@@ -78,7 +78,7 @@ def print_frame(frame):
 
 def get_user(adress):
     for user in settings.CLIENTS_CONNECTED:
-        if user[1] == adress:
+        if user["adress"] == adress:
             return user
 
 
