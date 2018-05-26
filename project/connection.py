@@ -5,7 +5,9 @@ import argparse
 import socket
 import frame_manager
 import settings
+import threading
 
+mutex = threading.Lock()
 
 def connectionRequest(socket, adress, _id):
     """ Client connect to the server """
@@ -49,7 +51,12 @@ def connectionAnswer(socket, adress, username, _id):
     dic["timer"] = None
     dic["nb_try"] = 0
     dic["wait_msg"] = []
-    settings.CLIENTS_CONNECTED.append(dic)
+    
+    mutex.acquire()
+    try :
+        settings.CLIENTS_CONNECTED.append(dic)
+    finally :
+        mutex.release()
 
     buf = frame_manager.encode_frame(_id, 0, "server", 0, 1, 1, 0, "")
     frame_manager.send_frame(socket, adress, buf)
@@ -59,7 +66,7 @@ def deconnectionAnswer(socket, adress, username, id_client, id_server):
 
     for client in settings.CLIENTS_CONNECTED: # Search and remove the client which want to disconnect
         if adress == client["adress"]:
-            settings.CLIENTS_CONNECTED.remove(client)
+            removeClient(adress)
             buf = frame_manager.encode_frame(
                 id_client, 0, "server", 0, 2, 1, 0, "")
             frame_manager.send_frame(socket, adress, buf)
@@ -68,3 +75,13 @@ def deconnectionAnswer(socket, adress, username, id_client, id_server):
     buf = frame_manager.encode_frame(id_server, 0, "server", 0, 0, 0, 0, msg)
     id_server = frame_manager.send_frame_public(socket, adress, buf, id_server)
     return id_server
+
+
+def removeClient(adress):
+    mutex.acquire()
+    try :
+        for client in settings.CLIENTS_CONNECTED: # Search and remove the client which want to disconnect
+            if adress == client["adress"]:
+                settings.CLIENTS_CONNECTED.remove(client)
+    finally :
+        mutex.release()

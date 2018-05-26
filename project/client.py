@@ -11,23 +11,6 @@ import sys
 import select
 
 
-def testSendFrame(s, adress):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    adress = ("localhost", 1212)
-    buf = frame_manager.encode_frame(1, 0, "killian", 0, 1, 0, 0, "")
-    frame_manager.send_frame(s, adress, buf)
-
-
-def testConnection(s, adress):
-    print "Connexion Request"
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    adress = ("localhost", 1212)
-    connection.connectionRequest(s, adress, current_id)
-    buf, adress = s.recvfrom(settings.FRAME_LENGTH)
-    frame = frame_manager.decode_frame(buf)
-    frame_manager.print_frame(frame)
-
-
 current_id = random.randint(1, 32767)
 connected = False
 
@@ -65,6 +48,7 @@ while(POWER_ON):
                 buf = frame_manager.encode_frame(
                     current_id, 0, username, 0, 0, 0, 0, msg)
                 frame_manager.send_frame(s, adress, buf)
+                ####### INSERER DECLANCHEMENT DU TIMER #######
         else:  # The user receiving a message
             # decoding the message
             buf, adresse = s.recvfrom(settings.FRAME_LENGTH)
