@@ -46,14 +46,10 @@ def connectionAnswer(socket, adress, username, _id):
     dic["username"] = username
     dic["adress"] = adress
     dic["id"] = _id
-    settings.CLIENTS_CONNECTED.append(dic)
-
-    dic = {}
-    dic["adress"] = adress
     dic["timer"] = None
     dic["nb_try"] = 0
     dic["wait_msg"] = []
-    settings.SIG_ARRAY.append(dic)
+    settings.CLIENTS_CONNECTED.append(dic)
 
     buf = frame_manager.encode_frame(_id, 0, "server", 0, 1, 1, 0, "")
     frame_manager.send_frame(socket, adress, buf)
@@ -61,7 +57,7 @@ def connectionAnswer(socket, adress, username, _id):
 
 def deconnectionAnswer(socket, adress, username, id_client, id_server):
 
-    for client in settings.CLIENTS_CONNECTED:  # Verify the username is not used
+    for client in settings.CLIENTS_CONNECTED: # Search and remove the client which want to disconnect
         if adress == client["adress"]:
             settings.CLIENTS_CONNECTED.remove(client)
             buf = frame_manager.encode_frame(
