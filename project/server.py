@@ -1,4 +1,4 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 import ctypes
 import struct
 import argparse
@@ -20,13 +20,29 @@ while POWER_ON:
     if frame["type"] == 0:  # Data frame
         if frame["zone"] == 0:  # Public canal
             if frame["state"] == 0:  # Default (Message)
-                current_id = frame_manager.send_frame_public(
-                    s, adress, buf, current_id)
+                for client in settings.CLIENTS_CONNECTED:
+                    if client["adress"] == adress:
+                        print "client id : "+str(client["id"])
+                        print "frame id : "+str(frame["id"])
+        #########################################################################
+                        if client["id"] == frame["id"]:
+                            print "Not implemented yet"
+                            # TODO : Send ACK
+                            #buf_ack = frame_manager.encode_frame(frame["id"], 1, "", 0, 0, 0, 0, "")
+                            # frame_manager.send_frame(s, adress, buf_ack) # Send ack to the client sender
+                        else:
+                            client["id"] = frame["id"]
+                            current_id = frame_manager.send_frame_public(
+                                s, adress, buf, current_id)
+        #########################################################################
+
             elif frame["state"] == 1:  # Connection
                 connection.connectionAnswer(
                     s, adress, frame["username"], frame["id"])
+        #########################################################################
             elif frame["state"] == 2:  # Deconnection
-                current_id = connection.deconnectionAnswer(s, adress, frame["username"], frame["id"], current_id)
+                current_id = connection.deconnectionAnswer(
+                    s, adress, frame["username"], frame["id"], current_id)
             elif frame["state"] == 3:  # Server command
                 print "Empty"
             else:  # Bad entry

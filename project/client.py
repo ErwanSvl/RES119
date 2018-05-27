@@ -9,6 +9,8 @@ import settings
 import random
 import sys
 import select
+from threading import Thread, Event
+from Timer import Timer
 
 
 current_id = random.randint(1, 32767)
@@ -16,6 +18,7 @@ connected = False
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 adress = (settings.HOST, settings.PORT)
+settings.BUFFER_CLIENT_ARRAY["adress"] = adress
 
 while not connected:
     username = connection.connectionRequest(s, adress, current_id)
@@ -30,9 +33,7 @@ while not connected:
         print "Echec de la connexion : trop de clients connectés."
 print "Connected\n"
 
-POWER_ON = True
-
-while(POWER_ON):
+while(settings.POWER_ON):
     rlist, _, _ = select.select([sys.stdin, s], [], [])
     for event in rlist:
         if isinstance(event, file):  # The user is writing a message
@@ -44,11 +45,18 @@ while(POWER_ON):
                     buf = frame_manager.encode_frame(
                         current_id, 0, username, 0, 2, 0, 0, "")
                     frame_manager.send_frame(s, adress, buf)
+                else:
+                    print "Error : la commande saisie est invalide, les commandes sont appelées via un '!' en début de message"
             else:
                 buf = frame_manager.encode_frame(
                     current_id, 0, username, 0, 0, 0, 0, msg)
                 frame_manager.send_frame(s, adress, buf)
-                ####### INSERER DECLANCHEMENT DU TIMER #######
+
+                if settings.BUFFER_CLIENT_ARRAY["timer"] == None:
+                    frame_manager.client_timer_init(adress, s, buf)
+                else :
+                    settings.BUFFER_CLIENT_ARRAY["wait_msg"].append(frame_manager.decode_frame(buf))
+
         else:  # The user receiving a message
             # decoding the message
             buf, adresse = s.recvfrom(settings.FRAME_LENGTH)
@@ -74,5 +82,24 @@ while(POWER_ON):
                     print "Empty"
                 else:  # Bad entry zone parameter
                     print "Empty"
+
             else:  # Ack frame
-                print 'Empty'
+                frame_manager.print_frame(frame)
+                # Detect if Ack frame ID receive is equals to the ID of the frame message that timer is waiting for 
+                if frame["id"] == settings.BUFFER_CLIENT_ARRAY["timer"].getID(): # Ack ID match with timer's frame ID  
+                    settings.BUFFER_CLIENT_ARRAY["stop_flag"].set()
+
+                    # Try if "wait_msg" is empty
+                    if len(settings.BUFFER_CLIENT_ARRAY["wait_msg"]) == 0: # "wait_msg" is empty
+                        settings.BUFFER_CLIENT_ARRAY["timer"] = None
+                    else: # "wait_msg" is not empty
+                        settings.BUFFER_CLIENT_ARRAY["timer"] = None
+                        frame_manager.client_timer_init(adress, socket, buf)
+
+                else: # Ack ID doesn't match with timer's frame ID
+
+                    # Try if "wait_msg" is empty
+                    if len(settings.BUFFER_CLIENT_ARRAY["wait_msg"]) > 0: # "wait_msg" is not empty
+                        for wait_msg in settings.BUFFER_CLIENT_ARRAY["wait_msg"]:
+                            if wait_msg["id"] == frame["id"]:
+                                settings.BUFFER_CLIENT_ARRAY["wait_msg"].remove(wait_msg)

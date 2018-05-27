@@ -5,6 +5,8 @@ import argparse
 import socket
 import connection
 import settings
+from threading import Thread, Event
+from Timer import Timer
 
 
 def encode_frame(_id, _type, username, zone, state, ack_state, error_state, data):
@@ -37,8 +39,6 @@ def send_frame_public(socket, adress, buf, _id):
         if user["adress"] != adress:
             send_frame(socket, user["adress"], updated_buf)
             _id = incremente_id(_id)
-        else:
-            user["id"] = frame["id"]  # update the ID
     return _id
 
 
@@ -88,3 +88,9 @@ def incremente_id(ID):
     else:
         return ID + 1
 
+
+def client_timer_init(adress, socket, buf):
+    """ Initialize the timer of a client data frame which wait an ack frame from server """
+    settings.BUFFER_CLIENT_ARRAY["stop_flag"] = Event()
+    settings.BUFFER_CLIENT_ARRAY["timer"] = Timer(settings.BUFFER_CLIENT_ARRAY["stop_flag"], settings.DURATION_TIMER, settings.TRY_MAX, buf, socket, adress)
+    settings.BUFFER_CLIENT_ARRAY["timer"].start()
