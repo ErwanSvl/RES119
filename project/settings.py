@@ -13,10 +13,4 @@ DURATION_TIMER = 2
 TRY_MAX = 7
 POWER_ON = True
 
-BUFFER_CLIENT_ARRAY = {}
-BUFFER_CLIENT_ARRAY["adress"] = None
-BUFFER_CLIENT_ARRAY["stop_flag"] = None
-BUFFER_CLIENT_ARRAY["timer"] = None
-BUFFER_CLIENT_ARRAY["wait_msg"] = []
-
 COMMANDS = []
