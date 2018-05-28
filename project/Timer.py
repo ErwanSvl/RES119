@@ -1,11 +1,9 @@
 from threading import Thread, Event
-import time
 import frame_manager
 import settings
 import connection
 import socket
 import sys
-
 
 class Timer(Thread):
     def __init__(self, event, duration, try_max, buf, socket, adress):
@@ -20,6 +18,7 @@ class Timer(Thread):
         self.is_working = True
 
     def run(self):
+
         while not self.stopped.wait(self.duration) and self.nb_try < self.try_max:
             print "Ack missing, reemit message for the " + str(self.nb_try) + " times"
             frame_manager.send_frame(self.socket, self.adress, self.buf)

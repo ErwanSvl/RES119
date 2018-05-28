@@ -38,7 +38,7 @@ def send_frame_public(socket, adress, buf, _id):
                                    frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
         if user["adress"] != adress:
             send_frame(socket, user["adress"], updated_buf)
-            wait_ack(adress, socket, updated_buf)
+            wait_ack(user["adress"], socket, updated_buf)
             print "init timer for " + user["username"]
             _id = incremente_id(_id)
     return _id

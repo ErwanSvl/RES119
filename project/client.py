@@ -59,14 +59,14 @@ while(settings.POWER_ON):
                     else:
                         print "Error : la commande saisie est invalide, les commandes sont appelées via un '!' en début de message"
                 else:
-                    buf = frame_manager.encode_frame(
-                        current_id, 0, username, 0, 0, 0, 0, msg)
-                    frame_manager.send_frame(s, adress, buf)
-
-                    if settings.CLIENTS_CONNECTED[0]["timer"] == None:
+                    # The client is already waiting an ack
+                    if settings.CLIENTS_CONNECTED[0]["timer"] != None and settings.CLIENTS_CONNECTED[0]["timer"].is_working:
+                        settings.CLIENTS_CONNECTED[0]["wait_msg"].append(buf)
+                    else:
+                        buf = frame_manager.encode_frame(
+                            current_id, 0, username, 0, 0, 0, 0, msg[0:len(msg) - 1])
+                        frame_manager.send_frame(s, adress, buf)
                         frame_manager.wait_ack(adress, s, buf)
-                    else :
-                        settings.CLIENTS_CONNECTED[0]["wait_msg"].append(frame_manager.decode_frame(buf))
 
         else:  # The user receiving a message
             # decoding the message
@@ -78,7 +78,9 @@ while(settings.POWER_ON):
                 if frame["zone"] == 0:  # Public canal
                     if frame["state"] == 0:  # Default (Message)
                         frame_manager.print_frame(frame)
-                        frame_manager.send_ack(settings.CLIENTS_CONNECTED[0]["adress"], s, frame) # Send an ack frame to the server
+                        # Send an ack frame to the server
+                        frame_manager.send_ack(
+                            settings.CLIENTS_CONNECTED[0]["adress"], s, frame)
                         print frame["username"]+" : "+frame["data"]
                     elif frame["state"] == 2:  # Deconnection
                         s.close()
@@ -94,24 +96,6 @@ while(settings.POWER_ON):
                     print "Empty"
                 else:  # Bad entry zone parameter
                     print "Empty"
-
             else:  # Ack frame
-                frame_manager.print_frame(frame)
-                # Detect if Ack frame ID receive is equals to the ID of the frame message that timer is waiting for 
-                if frame["id"] == settings.CLIENTS_CONNECTED[0]["timer"].getID(): # Ack ID match with timer's frame ID 
-                    frame_manager.defuseTimer(s, settings.CLIENTS_CONNECTED[0]["adress"])
-
-                    # Try if "wait_msg" is empty
-                    if len(settings.CLIENTS_CONNECTED[0]["wait_msg"]) == 0: # "wait_msg" is empty
-                        settings.CLIENTS_CONNECTED[0]["timer"] = None
-                    else: # "wait_msg" is not empty
-                        settings.CLIENTS_CONNECTED[0]["timer"] = None
-                        frame_manager.wait_ack(adress, s, buf)
-
-                else: # Ack ID doesn't match with timer's frame ID
-
-                    # Try if "wait_msg" is empty
-                    if len(settings.CLIENTS_CONNECTED[0]["wait_msg"]) > 0: # "wait_msg" is not empty
-                        for wait_msg in settings.CLIENTS_CONNECTED[0]["wait_msg"]:
-                            if wait_msg["id"] == frame["id"]:
-                                settings.CLIENTS_CONNECTED[0]["wait_msg"].remove(wait_msg)
+                frame_manager.defuseTimer(
+                    s, settings.CLIENTS_CONNECTED[0]["adress"])

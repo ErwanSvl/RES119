@@ -49,6 +49,7 @@ def connectionAnswer(socket, adress, username, _id):
     dic["adress"] = adress
     dic["id"] = _id
     dic["timer"] = None
+    dic["stop_flag"] = None
     dic["nb_try"] = 0
     dic["wait_msg"] = []
     

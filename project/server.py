@@ -22,10 +22,9 @@ while POWER_ON:
             if frame["state"] == 0:  # Default (Message)
                 for client in settings.CLIENTS_CONNECTED:
                     if client["adress"] == adress:  # Find the sender
-                        # ID is the same : this message is a reemission
-                        if client["id"] == frame["id"]:
-                            frame_manager.send_ack(adress, s, frame)
-                        else:  # New message
+                        frame_manager.send_ack(adress, s, frame)
+                        # if the ID is the same : this message is a reemission
+                        if client["id"] != frame["id"]:
                             client["id"] = frame["id"]
                             current_id = frame_manager.send_frame_public(
                                 s, adress, buf, current_id)
@@ -46,5 +45,4 @@ while POWER_ON:
         else:  # Bad entry zone parameter
             print "Bad Entry"
     else:  # Ack frame
-        print settings.CLIENTS_CONNECTED
         frame_manager.defuseTimer(socket, adress)
