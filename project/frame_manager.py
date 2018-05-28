@@ -39,6 +39,7 @@ def send_frame_public(socket, adress, buf, _id):
         if user["adress"] != adress:
             send_frame(socket, user["adress"], updated_buf)
             wait_ack(adress, socket, updated_buf)
+            print "init timer for " + user["username"]
             _id = incremente_id(_id)
     return _id
 
@@ -90,13 +91,6 @@ def incremente_id(ID):
         return ID + 1
 
 
-def client_timer_init(adress, socket, buf, rank):
-    """ Initialize the timer of a client data frame which wait an ack frame from server """
-    settings.CLIENTS_CONNECTED[rank]["stop_flag"] = Event()
-    settings.CLIENTS_CONNECTED[rank]["timer"] = Timer(settings.CLIENTS_CONNECTED[rank]["stop_flag"], settings.DURATION_TIMER, settings.TRY_MAX, buf, socket, adress)
-    settings.CLIENTS_CONNECTED[rank]["timer"].start()
-
-
 def send_ack(adress, socket, frame):
     buf = encode_frame(frame["id"], 1, "", 0, 0, 0, 0, "")
     socket.sendto(buf, adress)
@@ -109,6 +103,7 @@ def wait_ack(adress, socket, buf):
             stopFlag = Event()
             client["timer"] = Timer(
                 stopFlag, settings.DURATION_TIMER, settings.TRY_MAX, buf, socket, adress)
+            client["timer"].start()
             client["stop_flag"] = stopFlag
 
 
@@ -116,9 +111,10 @@ def defuseTimer(socket, adress):
     print "Receiving Ack, defuse timer"
     for client in settings.CLIENTS_CONNECTED:
         if client["adress"] == adress:
-            client["timer"].set()
-            if len(client["wait_msg"]) != 0 :
-                frame = client.pop[0] # Take off the first frame of the table
-                buf = encode_frame(frame["id"], frame["type"], frame["username"], frame["zone"], frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
+            client["stop_flag"].set()
+            if len(client["wait_msg"]) != 0:
+                frame = client.pop[0]  # Take off the first frame of the table
+                buf = encode_frame(frame["id"], frame["type"], frame["username"], frame["zone"],
+                                   frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
                 send_frame(socket, adress, buf)
                 wait_ack(adress, socket, buf)
