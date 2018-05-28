@@ -78,6 +78,7 @@ while(settings.POWER_ON):
                 if frame["zone"] == 0:  # Public canal
                     if frame["state"] == 0:  # Default (Message)
                         frame_manager.print_frame(frame)
+                        frame_manager.send_ack(settings.CLIENTS_CONNECTED[0]["adress"], s, frame) # Send an ack frame to the server
                         print frame["username"]+" : "+frame["data"]
                     elif frame["state"] == 2:  # Deconnection
                         s.close()

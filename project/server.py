@@ -46,4 +46,5 @@ while POWER_ON:
         else:  # Bad entry zone parameter
             print "Bad Entry"
     else:  # Ack frame
+        print settings.CLIENTS_CONNECTED
         frame_manager.defuseTimer(socket, adress)
