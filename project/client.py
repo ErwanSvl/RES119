@@ -18,7 +18,6 @@ connected = False
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 adress = (settings.HOST, settings.PORT)
-settings.BUFFER_CLIENT_ARRAY["adress"] = adress
 
 while not connected:
     username = connection.connectionRequest(s, adress, current_id)
@@ -31,6 +30,17 @@ while not connected:
         print "Echec de la connexion : votre login est déjà utilisé."
     elif frame["error_state"] == 2:
         print "Echec de la connexion : trop de clients connectés."
+
+dic = {}
+dic["adress"] = None
+dic["stop_flag"] = None
+dic["timer"] = None
+dic["username"] = "server"
+dic["wait_msg"] = []
+dic["zone"] = 0
+dic["id"] = 0
+
+settings.CLIENTS_CONNECTED.append(dic)
 print "Connected\n"
 
 while(settings.POWER_ON):
@@ -52,10 +62,10 @@ while(settings.POWER_ON):
                     current_id, 0, username, 0, 0, 0, 0, msg)
                 frame_manager.send_frame(s, adress, buf)
 
-                if settings.BUFFER_CLIENT_ARRAY["timer"] == None:
-                    frame_manager.client_timer_init(adress, s, buf)
+                if settings.CLIENTS_CONNECTED[0]["timer"] == None:
+                    frame_manager.client_timer_init(adress, s, buf, 0)
                 else :
-                    settings.BUFFER_CLIENT_ARRAY["wait_msg"].append(frame_manager.decode_frame(buf))
+                    settings.CLIENTS_CONNECTED[0]["wait_msg"].append(frame_manager.decode_frame(buf))
 
         else:  # The user receiving a message
             # decoding the message
@@ -86,20 +96,20 @@ while(settings.POWER_ON):
             else:  # Ack frame
                 frame_manager.print_frame(frame)
                 # Detect if Ack frame ID receive is equals to the ID of the frame message that timer is waiting for 
-                if frame["id"] == settings.BUFFER_CLIENT_ARRAY["timer"].getID(): # Ack ID match with timer's frame ID  
-                    settings.BUFFER_CLIENT_ARRAY["stop_flag"].set()
+                if frame["id"] == settings.CLIENTS_CONNECTED[0]["timer"].getID(): # Ack ID match with timer's frame ID  
+                    settings.CLIENTS_CONNECTED[0]["stop_flag"].set()
 
                     # Try if "wait_msg" is empty
-                    if len(settings.BUFFER_CLIENT_ARRAY["wait_msg"]) == 0: # "wait_msg" is empty
-                        settings.BUFFER_CLIENT_ARRAY["timer"] = None
+                    if len(settings.CLIENTS_CONNECTED[0]["wait_msg"]) == 0: # "wait_msg" is empty
+                        settings.CLIENTS_CONNECTED[0]["timer"] = None
                     else: # "wait_msg" is not empty
-                        settings.BUFFER_CLIENT_ARRAY["timer"] = None
+                        settings.CLIENTS_CONNECTED[0]["timer"] = None
                         frame_manager.client_timer_init(adress, socket, buf)
 
                 else: # Ack ID doesn't match with timer's frame ID
 
                     # Try if "wait_msg" is empty
-                    if len(settings.BUFFER_CLIENT_ARRAY["wait_msg"]) > 0: # "wait_msg" is not empty
-                        for wait_msg in settings.BUFFER_CLIENT_ARRAY["wait_msg"]:
+                    if len(settings.CLIENTS_CONNECTED[0]["wait_msg"]) > 0: # "wait_msg" is not empty
+                        for wait_msg in settings.CLIENTS_CONNECTED[0]["wait_msg"]:
                             if wait_msg["id"] == frame["id"]:
-                                settings.BUFFER_CLIENT_ARRAY["wait_msg"].remove(wait_msg)
+                                settings.CLIENTS_CONNECTED[0]["wait_msg"].remove(wait_msg)
