@@ -21,13 +21,14 @@ class Timer(Thread):
 
     def run(self):
         while not self.stopped.wait(self.duration) and self.nb_try < self.try_max:
+            print "Ack missing, reemit message for the " + str(self.nb_try) + " times"
             frame_manager.send_frame(self.socket, self.adress, self.buf)
             self.nb_try += 1
-        if self.nb_try >= self.try_max:
+        if self.nb_try >= self.try_max: # Too much retry, give up
             connection.removeClient(self.adress)
+            print "Error : server injoingnable, appuyez sur entrer pour quitter"
+            settings.POWER_ON = False
         self.is_working = False
-        print "Error : server injoingnable, appuyez sur entrer pour quitter"
-        settings.POWER_ON = False
 
 
     def getID(self):

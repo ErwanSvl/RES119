@@ -38,6 +38,7 @@ def send_frame_public(socket, adress, buf, _id):
                                    frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
         if user["adress"] != adress:
             send_frame(socket, user["adress"], updated_buf)
+            wait_ack(adress, socket, updated_buf)
             _id = incremente_id(_id)
     return _id
 
@@ -98,7 +99,7 @@ def client_timer_init(adress, socket, buf, rank):
 
 def send_ack(adress, socket, frame):
     buf = encode_frame(frame["id"], 1, "", 0, 0, 0, 0, "")
-    socket.sendto(adress, buf)
+    socket.sendto(buf, adress)
     print "Sending Ack to " + frame["username"]
 
 
@@ -111,8 +112,13 @@ def wait_ack(adress, socket, buf):
             client["stop_flag"] = stopFlag
 
 
-def defuseTimer(adress):
+def defuseTimer(socket, adress):
+    print "Receiving Ack, defuse timer"
     for client in settings.CLIENTS_CONNECTED:
         if client["adress"] == adress:
             client["timer"].set()
-    
+            if len(client["wait_msg"]) != 0 :
+                frame = client.pop[0] # Take off the first frame of the table
+                buf = encode_frame(frame["id"], frame["type"], frame["username"], frame["zone"], frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
+                send_frame(socket, adress, buf)
+                wait_ack(adress, socket, buf)

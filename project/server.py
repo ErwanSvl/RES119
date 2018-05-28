@@ -24,7 +24,7 @@ while POWER_ON:
                     if client["adress"] == adress:  # Find the sender
                         # ID is the same : this message is a reemission
                         if client["id"] == frame["id"]:
-                            frame_manager.send_ack(frame["adress"], s, frame)
+                            frame_manager.send_ack(adress, s, frame)
                         else:  # New message
                             client["id"] = frame["id"]
                             current_id = frame_manager.send_frame_public(
@@ -46,7 +46,4 @@ while POWER_ON:
         else:  # Bad entry zone parameter
             print "Bad Entry"
     else:  # Ack frame
-        if frame["zone"] == 0:  # Ack for public canal
-            print 'Not implemented yet'
-        else:
-            print 'Not implemented yet'
+        frame_manager.defuseTimer(socket, adress)
