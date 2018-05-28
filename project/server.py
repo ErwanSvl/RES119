@@ -21,30 +21,22 @@ while POWER_ON:
         if frame["zone"] == 0:  # Public canal
             if frame["state"] == 0:  # Default (Message)
                 for client in settings.CLIENTS_CONNECTED:
-                    if client["adress"] == adress:
-                        print "client id : "+str(client["id"])
-                        print "frame id : "+str(frame["id"])
-        #########################################################################
+                    if client["adress"] == adress:  # Find the sender
+                        # ID is the same : this message is a reemission
                         if client["id"] == frame["id"]:
-                            print "Not implemented yet"
-                            # TODO : Send ACK
-                            #buf_ack = frame_manager.encode_frame(frame["id"], 1, "", 0, 0, 0, 0, "")
-                            # frame_manager.send_frame(s, adress, buf_ack) # Send ack to the client sender
-                        else:
+                            frame_manager.send_ack(frame["adress"], s, frame)
+                        else:  # New message
                             client["id"] = frame["id"]
                             current_id = frame_manager.send_frame_public(
                                 s, adress, buf, current_id)
-        #########################################################################
-
             elif frame["state"] == 1:  # Connection
                 connection.connectionAnswer(
                     s, adress, frame["username"], frame["id"])
-        #########################################################################
             elif frame["state"] == 2:  # Deconnection
                 current_id = connection.deconnectionAnswer(
                     s, adress, frame["username"], frame["id"], current_id)
             elif frame["state"] == 3:  # Server command
-                print "Empty"
+                print "Not implemented yet"
             else:  # Bad entry
                 print "Bad Entry"
         elif frame["zone"] == 1:  # Centralized private canal
@@ -54,4 +46,7 @@ while POWER_ON:
         else:  # Bad entry zone parameter
             print "Bad Entry"
     else:  # Ack frame
-        print 'Not implemented yet'
+        if frame["zone"] == 0:  # Ack for public canal
+            print 'Not implemented yet'
+        else:
+            print 'Not implemented yet'

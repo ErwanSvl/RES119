@@ -92,5 +92,27 @@ def incremente_id(ID):
 def client_timer_init(adress, socket, buf):
     """ Initialize the timer of a client data frame which wait an ack frame from server """
     settings.BUFFER_CLIENT_ARRAY["stop_flag"] = Event()
-    settings.BUFFER_CLIENT_ARRAY["timer"] = Timer(settings.BUFFER_CLIENT_ARRAY["stop_flag"], settings.DURATION_TIMER, settings.TRY_MAX, buf, socket, adress)
+    settings.BUFFER_CLIENT_ARRAY["timer"] = Timer(
+        settings.BUFFER_CLIENT_ARRAY["stop_flag"], settings.DURATION_TIMER, settings.TRY_MAX, buf, socket, adress)
     settings.BUFFER_CLIENT_ARRAY["timer"].start()
+
+
+def send_ack(adress, socket, frame):
+    buf = encode_frame(frame["id"], 1, "", 0, 0, 0, 0, "")
+    socket.sendto(adress, buf)
+    print "Sending Ack to " + frame["username"]
+
+
+def wait_ack(adress, socket, buf):
+    for client in settings.CLIENTS_CONNECTED:
+        if client["adress"] == adress:
+            stopFlag = Event()
+            client["timer"] = Timer(
+                stopFlag, settings.DURATION_TIMER, settings.TRY_MAX, buf, socket, adress)
+            client["stop_flag"] = stopFlag
+
+
+def defuseTimer(adress):
+    for client in settings.CLIENTS_CONNECTED:
+        if client["adress"] == adress:
+            client["timer"].set()
