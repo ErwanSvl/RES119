@@ -89,13 +89,6 @@ def incremente_id(ID):
         return ID + 1
 
 
-def client_timer_init(adress, socket, buf, rank):
-    """ Initialize the timer of a client data frame which wait an ack frame from server """
-    settings.CLIENTS_CONNECTED[rank]["stop_flag"] = Event()
-    settings.CLIENTS_CONNECTED[rank]["timer"] = Timer(settings.CLIENTS_CONNECTED[rank]["stop_flag"], settings.DURATION_TIMER, settings.TRY_MAX, buf, socket, adress)
-    settings.CLIENTS_CONNECTED[rank]["timer"].start()
-
-
 def send_ack(adress, socket, frame):
     buf = encode_frame(frame["id"], 1, "", 0, 0, 0, 0, "")
     socket.sendto(adress, buf)
@@ -108,11 +101,13 @@ def wait_ack(adress, socket, buf):
             stopFlag = Event()
             client["timer"] = Timer(
                 stopFlag, settings.DURATION_TIMER, settings.TRY_MAX, buf, socket, adress)
+            client["timer"].start()
             client["stop_flag"] = stopFlag
 
 
 def defuseTimer(adress):
     for client in settings.CLIENTS_CONNECTED:
         if client["adress"] == adress:
-            client["timer"].set()
+            client["stop_flag"].set()
+            print "Timer off"
     

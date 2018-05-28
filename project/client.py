@@ -32,7 +32,7 @@ while not connected:
         print "Echec de la connexion : trop de clients connectés."
 
 dic = {}
-dic["adress"] = None
+dic["adress"] = adress
 dic["stop_flag"] = None
 dic["timer"] = None
 dic["username"] = "server"
@@ -48,24 +48,25 @@ while(settings.POWER_ON):
     for event in rlist:
         if isinstance(event, file):  # The user is writing a message
             msg = sys.stdin.readline()
-            # Incremente the ID before sending
-            current_id = frame_manager.incremente_id(current_id)
-            if msg[0] == "!":
-                if msg[0:len(msg) - 1] == "!quit":
-                    buf = frame_manager.encode_frame(
-                        current_id, 0, username, 0, 2, 0, 0, "")
-                    frame_manager.send_frame(s, adress, buf)
+            if settings.POWER_ON:
+                # Incremente the ID before sending
+                current_id = frame_manager.incremente_id(current_id)
+                if msg[0] == "!":
+                    if msg[0:len(msg) - 1] == "!quit":
+                        buf = frame_manager.encode_frame(
+                            current_id, 0, username, 0, 2, 0, 0, "")
+                        frame_manager.send_frame(s, adress, buf)
+                    else:
+                        print "Error : la commande saisie est invalide, les commandes sont appelées via un '!' en début de message"
                 else:
-                    print "Error : la commande saisie est invalide, les commandes sont appelées via un '!' en début de message"
-            else:
-                buf = frame_manager.encode_frame(
-                    current_id, 0, username, 0, 0, 0, 0, msg)
-                frame_manager.send_frame(s, adress, buf)
+                    buf = frame_manager.encode_frame(
+                        current_id, 0, username, 0, 0, 0, 0, msg)
+                    frame_manager.send_frame(s, adress, buf)
 
-                if settings.CLIENTS_CONNECTED[0]["timer"] == None:
-                    frame_manager.client_timer_init(adress, s, buf, 0)
-                else :
-                    settings.CLIENTS_CONNECTED[0]["wait_msg"].append(frame_manager.decode_frame(buf))
+                    if settings.CLIENTS_CONNECTED[0]["timer"] == None:
+                        frame_manager.wait_ack(adress, s, buf)
+                    else :
+                        settings.CLIENTS_CONNECTED[0]["wait_msg"].append(frame_manager.decode_frame(buf))
 
         else:  # The user receiving a message
             # decoding the message
@@ -96,15 +97,15 @@ while(settings.POWER_ON):
             else:  # Ack frame
                 frame_manager.print_frame(frame)
                 # Detect if Ack frame ID receive is equals to the ID of the frame message that timer is waiting for 
-                if frame["id"] == settings.CLIENTS_CONNECTED[0]["timer"].getID(): # Ack ID match with timer's frame ID  
-                    settings.CLIENTS_CONNECTED[0]["stop_flag"].set()
+                if frame["id"] == settings.CLIENTS_CONNECTED[0]["timer"].getID(): # Ack ID match with timer's frame ID 
+                    frame_manager.defuseTimer(settings.CLIENTS_CONNECTED[0]["adress"])
 
                     # Try if "wait_msg" is empty
                     if len(settings.CLIENTS_CONNECTED[0]["wait_msg"]) == 0: # "wait_msg" is empty
                         settings.CLIENTS_CONNECTED[0]["timer"] = None
                     else: # "wait_msg" is not empty
                         settings.CLIENTS_CONNECTED[0]["timer"] = None
-                        frame_manager.client_timer_init(adress, socket, buf)
+                        frame_manager.wait_ack(adress, s, buf)
 
                 else: # Ack ID doesn't match with timer's frame ID
 
