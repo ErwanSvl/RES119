@@ -20,18 +20,6 @@ connected = False
 s = socerr.socerr(socket.AF_INET, socket.SOCK_DGRAM, settings.ERROR_RATE)
 adress = (settings.HOST, settings.PORT)
 
-while not connected:
-    username = connection.connectionRequest(s, adress, current_id)
-    buf, adresse = s.recvfrom(settings.FRAME_LENGTH)
-    frame = frame_manager.decode_frame(buf)
-    frame_manager.print_frame(frame)
-    if frame["ack_state"] == 1:
-        connected = True
-    elif frame["error_state"] == 1:
-        print "Echec de la connexion : votre login est déjà utilisé."
-    elif frame["error_state"] == 2:
-        print "Echec de la connexion : trop de clients connectés."
-
 dic = {}
 dic["adress"] = adress
 dic["stop_flag"] = None
@@ -42,6 +30,21 @@ dic["zone"] = 0
 dic["id"] = 0
 
 settings.CLIENTS_CONNECTED.append(dic)
+
+while not connected:
+    username = connection.connectionRequest(s, adress, current_id)
+    buf, adresse = s.recvfrom(settings.FRAME_LENGTH)
+    frame_manager.defuseTimer(s, settings.CLIENTS_CONNECTED[0]["adress"])
+    frame = frame_manager.decode_frame(buf)
+    frame_manager.print_frame(frame)
+    if frame["ack_state"] == 1:
+        connected = True
+    elif frame["error_state"] == 1:
+        print "Echec de la connexion : votre login est déjà utilisé."
+    elif frame["error_state"] == 2:
+        print "Echec de la connexion : trop de clients connectés."
+
+
 print "Connected\n"
 
 while(settings.POWER_ON):
