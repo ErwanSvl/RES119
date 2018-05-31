@@ -19,8 +19,6 @@ def connectionRequest(socket, adress, _id):
 
     # Verify that username is shorter than or equal to 10 characters and longer than 0
     while(len(username) > 10) or (len(username) < 1):
-        print username
-        print len(username)
         print "Le nombre de charactères doit être compris entre 1 et 10 :"
         username = raw_input()
         for i in range(10-len(username)):
@@ -43,7 +41,7 @@ def connectionAnswer(socket, adress, username, _id):
     # Number max is reached
     if not is_exist and len(settings.CLIENTS_CONNECTED) == settings.MAX_CLIENTS:
         buf = frame_manager.encode_frame(_id, 0, "server", 0, 1, 2, 2, "")
-        frame_manager.send_frame(socket, adress, buf)
+        frame_manager.send_frame_without_ack(socket, adress, buf)
         return
 
     if not is_exist:
@@ -51,7 +49,7 @@ def connectionAnswer(socket, adress, username, _id):
             if username == client["username"]:
                 buf = frame_manager.encode_frame(
                     _id, 0, "server", 0, 1, 2, 1, "")
-                frame_manager.send_frame(socket, adress, buf)
+                frame_manager.send_frame_without_ack(socket, adress, buf)
                 return
 
     mutex.acquire()

@@ -30,6 +30,7 @@ def send_frame(socket, adress, buf):
         if client["adress"] == adress:
             # There is already a waiting ack
             if client["timer"] != None and client["timer"].is_working:
+                print "Already waiting an ack, add to the buffer"
                 client["wait_msg"].append(buf)
             else:  # Send the frame and init the timer
                 socket.sendto(buf, adress)
@@ -44,6 +45,7 @@ def send_frame_without_ack(socket, adress, buf):
         if client["adress"] == adress:
             # There is already a waiting ack
             if client["timer"] != None and client["timer"].is_working:
+                print "Already waiting an ack, add to the buffer"
                 client["wait_msg"].append(buf)
             else:  # Send the frame and init the timer
                 socket.sendto(buf, adress)

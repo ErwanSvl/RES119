@@ -21,7 +21,7 @@ class Timer(Thread):
 
         while not self.stopped.wait(self.duration) and self.nb_try < self.try_max:
             print "Ack missing, reemit message for the " + str(self.nb_try) + " times"
-            frame_manager.send_frame_without_ack(self.socket, self.adress, self.buf)
+            self.socket.sendto(self.buf, self.adress)
             self.nb_try += 1
         if self.nb_try >= self.try_max: # Too much retry, give up
             connection.removeClient(self.adress)
