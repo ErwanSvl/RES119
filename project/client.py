@@ -85,7 +85,9 @@ while(settings.POWER_ON):
                         # Send an ack frame to the server
                         frame_manager.send_ack(
                             settings.CLIENTS_CONNECTED[0]["adress"], s, frame)
-                        print frame["username"]+" : "+frame["data"]
+                        if settings.CLIENTS_CONNECTED[0]["id"] != frame["id"]:
+                            print frame["username"]+" : "+frame["data"]
+                            settings.CLIENTS_CONNECTED[0]["id"] = frame["id"]
                     elif frame["state"] == 2:  # Deconnection
                         s.close()
                         print "Good bye !"
