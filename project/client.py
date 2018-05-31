@@ -57,9 +57,11 @@ while(settings.POWER_ON):
                 current_id = frame_manager.incremente_id(current_id)
                 if msg[0] == "!":
                     if msg[0:len(msg) - 1] == "!quit":
+                        print "Send deconnection request"
                         buf = frame_manager.encode_frame(
                             current_id, 0, username, 0, 2, 0, 0, "")
                         frame_manager.send_frame(s, adress, buf)
+                        frame_manager.wait_ack(adress, s, buf)
                     else:
                         print "Error : la commande saisie est invalide, les commandes sont appelées via un '!' en début de message"
                 else:
@@ -74,7 +76,7 @@ while(settings.POWER_ON):
 
         else:  # The user receiving a message
             # decoding the message
-            buf, adresse = s.recvfrom(settings.FRAME_LENGTH)
+            buf, adress = s.recvfrom(settings.FRAME_LENGTH)
             frame = frame_manager.decode_frame(buf)
 
             # detect the message type
@@ -87,8 +89,9 @@ while(settings.POWER_ON):
                             settings.CLIENTS_CONNECTED[0]["adress"], s, frame)
                         print frame["username"]+" : "+frame["data"]
                     elif frame["state"] == 2:  # Deconnection
-                        s.close()
+                        frame_manager.defuseTimer(s, adress)
                         print "Good bye !"
+                        s.close()
                         sys.exit()
                     elif frame["state"] == 3:  # Server command
                         print "Empty"

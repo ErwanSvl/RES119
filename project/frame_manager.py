@@ -29,19 +29,19 @@ def send_frame(socket, adress, buf):
     socket.sendto(buf, adress)
 
 
-def send_frame_public(socket, adress, buf, _id):
+def send_frame_public(socket, adress, buf, id_server):
     """ Send a frame with parameters encoded to all the connected clients except the sender.
     Return the final server id incremented"""
     frame = decode_frame(buf)  # the ID have to change so we need to decode
     for user in settings.CLIENTS_CONNECTED:
-        updated_buf = encode_frame(_id, frame["type"], frame["username"], frame["zone"],
+        updated_buf = encode_frame(id_server, frame["type"], frame["username"], frame["zone"],
                                    frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
         if user["adress"] != adress:
             send_frame(socket, user["adress"], updated_buf)
             wait_ack(user["adress"], socket, updated_buf)
             print "init timer for " + user["username"]
-            _id = incremente_id(_id)
-    return _id
+            id_server = incremente_id(id_server)
+    return id_server
 
 
 def decode_frame(buf):
@@ -112,7 +112,7 @@ def defuseTimer(socket, adress):
     for client in settings.CLIENTS_CONNECTED:
         if client["adress"] == adress:
             client["stop_flag"].set()
-            if len(client["wait_msg"]) != 0:
+            if len(client["wait_msg"]) > 0:
                 frame = client.pop(0)  # Take off the first frame of the table
                 buf = encode_frame(frame["id"], frame["type"], frame["username"], frame["zone"],
                                    frame["state"], frame["ack_state"], frame["error_state"], frame["data"])

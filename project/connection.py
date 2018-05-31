@@ -66,7 +66,7 @@ def connectionAnswer(socket, adress, username, _id):
             new_client["stop_flag"] = None
             new_client["nb_try"] = 0
             new_client["wait_msg"] = []
-            
+
             settings.CLIENTS_CONNECTED.append(
                 new_client)  # This is a new client
     finally:
@@ -77,17 +77,21 @@ def connectionAnswer(socket, adress, username, _id):
 
 
 def deconnectionAnswer(socket, adress, username, id_client, id_server):
-
+    print "Send deconnection answer"
     for client in settings.CLIENTS_CONNECTED:  # Search and remove the client which want to disconnect
         if adress == client["adress"]:
             removeClient(adress)
-            buf = frame_manager.encode_frame(
-                id_client, 0, "server", 0, 2, 1, 0, "")
-            frame_manager.send_frame(socket, adress, buf)
 
-    msg = "L'utilisateur " + username + " s'est déconnecté"
-    buf = frame_manager.encode_frame(id_server, 0, "server", 0, 0, 0, 0, msg)
-    id_server = frame_manager.send_frame_public(socket, adress, buf, id_server)
+            # Send a message to the other client in the channel
+            msg = "L'utilisateur " + username + " s'est déconnecté"
+            buf = frame_manager.encode_frame(
+                id_server, 0, "server", 0, 0, 0, 0, msg)
+            id_server = frame_manager.send_frame_public(
+                socket, adress, buf, id_server)
+
+    buf = frame_manager.encode_frame(
+    id_client, 0, "server", 0, 2, 1, 0, "")
+    frame_manager.send_frame(socket, adress, buf)
     return id_server
 
 
