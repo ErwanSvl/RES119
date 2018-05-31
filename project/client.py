@@ -61,18 +61,12 @@ while(settings.POWER_ON):
                         buf = frame_manager.encode_frame(
                             current_id, 0, username, 0, 2, 0, 0, "")
                         frame_manager.send_frame(s, adress, buf)
-                        frame_manager.wait_ack(adress, s, buf)
                     else:
                         print "Error : la commande saisie est invalide, les commandes sont appelées via un '!' en début de message"
                 else:
-                    # The client is already waiting an ack
-                    if settings.CLIENTS_CONNECTED[0]["timer"] != None and settings.CLIENTS_CONNECTED[0]["timer"].is_working:
-                        settings.CLIENTS_CONNECTED[0]["wait_msg"].append(buf)
-                    else:
-                        buf = frame_manager.encode_frame(
-                            current_id, 0, username, 0, 0, 0, 0, msg[0:len(msg) - 1])
-                        frame_manager.send_frame(s, adress, buf)
-                        frame_manager.wait_ack(adress, s, buf)
+                    buf = frame_manager.encode_frame(
+                        current_id, 0, username, 0, 0, 0, 0, msg[0:len(msg) - 1])
+                    frame_manager.send_frame(s, adress, buf)
 
         else:  # The user receiving a message
             # decoding the message
