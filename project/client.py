@@ -3,6 +3,7 @@ import ctypes
 import struct
 import argparse
 import socket
+import socerr
 import connection
 import frame_manager
 import settings
@@ -16,7 +17,7 @@ from Timer import Timer
 current_id = random.randint(1, 32767)
 connected = False
 
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s = socerr.socerr(socket.AF_INET, socket.SOCK_DGRAM, settings.ERROR_RATE)
 adress = (settings.HOST, settings.PORT)
 
 while not connected:

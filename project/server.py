@@ -3,6 +3,7 @@ import ctypes
 import struct
 import argparse
 import socket
+import socerr
 import frame_manager
 import connection
 import settings
@@ -10,7 +11,7 @@ import settings
 POWER_ON = True
 current_id = 0
 
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s = socerr.socerr(socket.AF_INET, socket.SOCK_DGRAM, settings.ERROR_RATE)
 s.bind((settings.HOST, settings.PORT))
 
 while POWER_ON:
