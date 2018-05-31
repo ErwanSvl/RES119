@@ -113,7 +113,7 @@ def defuseTimer(socket, adress):
         if client["adress"] == adress:
             client["stop_flag"].set()
             if len(client["wait_msg"]) != 0:
-                frame = client.pop[0]  # Take off the first frame of the table
+                frame = client.pop(0)  # Take off the first frame of the table
                 buf = encode_frame(frame["id"], frame["type"], frame["username"], frame["zone"],
                                    frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
                 send_frame(socket, adress, buf)
