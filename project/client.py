@@ -27,7 +27,7 @@ dic["timer"] = None
 dic["username"] = "server"
 dic["wait_msg"] = []
 dic["zone"] = 0
-dic["id"] = 0
+dic["id"] = -1
 
 settings.CLIENTS_CONNECTED.append(dic)
 

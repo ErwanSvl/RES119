@@ -26,7 +26,28 @@ def encode_frame(_id, _type, username, zone, state, ack_state, error_state, data
 def send_frame(socket, adress, buf):
     """ Send a frame with parameters encoded to the server"""
     # send the buffer
-    socket.sendto(buf, adress)
+    for client in settings.CLIENTS_CONNECTED:
+        if client["adress"] == adress:
+            # There is already a waiting ack
+            if client["timer"] != None and client["timer"].is_working:
+                client["wait_msg"].append(buf)
+            else:  # Send the frame and init the timer
+                socket.sendto(buf, adress)
+                wait_ack(adress, socket, buf)
+            return
+
+
+def send_frame_without_ack(socket, adress, buf):
+    """ Send a frame with parameters encoded to the server"""
+    # send the buffer
+    for client in settings.CLIENTS_CONNECTED:
+        if client["adress"] == adress:
+            # There is already a waiting ack
+            if client["timer"] != None and client["timer"].is_working:
+                client["wait_msg"].append(buf)
+            else:  # Send the frame and init the timer
+                socket.sendto(buf, adress)
+            return
 
 
 def send_frame_public(socket, adress, buf, id_server):
@@ -38,7 +59,6 @@ def send_frame_public(socket, adress, buf, id_server):
                                    frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
         if user["adress"] != adress:
             send_frame(socket, user["adress"], updated_buf)
-            wait_ack(user["adress"], socket, updated_buf)
             print "init timer for " + user["username"]
             id_server = incremente_id(id_server)
     return id_server
@@ -113,8 +133,8 @@ def defuseTimer(socket, adress):
         if client["adress"] == adress:
             client["stop_flag"].set()
             if len(client["wait_msg"]) > 0:
-                frame = client.pop(0)  # Take off the first frame of the table
+                # Take off the first frame of the table
+                frame = client["wait_msg"].pop(0)
                 buf = encode_frame(frame["id"], frame["type"], frame["username"], frame["zone"],
                                    frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
                 send_frame(socket, adress, buf)
-                wait_ack(adress, socket, buf)
