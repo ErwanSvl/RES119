@@ -30,7 +30,6 @@ def connectionRequest(socket, adress, _id):
     buf = frame_manager.encode_frame(_id, 0, username, 0, 1, 0, 0, "")
     # Send the encoding frame
     frame_manager.send_frame(socket, adress, buf)
-    frame_manager.wait_ack(adress, socket, buf)
     return usernameNoSpace
 
 
@@ -73,7 +72,7 @@ def connectionAnswer(socket, adress, username, _id):
         mutex.release()
 
     buf = frame_manager.encode_frame(_id, 0, "server", 0, 1, 1, 0, "")
-    frame_manager.send_frame(socket, adress, buf)
+    frame_manager.send_frame_without_ack(socket, adress, buf)
 
 
 def deconnectionAnswer(socket, adress, username, id_client, id_server):
@@ -91,7 +90,7 @@ def deconnectionAnswer(socket, adress, username, id_client, id_server):
 
     buf = frame_manager.encode_frame(
     id_client, 0, "server", 0, 2, 1, 0, "")
-    frame_manager.send_frame(socket, adress, buf)
+    frame_manager.send_frame_without_ack(socket, adress, buf)
     return id_server
 
 
