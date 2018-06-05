@@ -12,13 +12,19 @@ import frame_manager
 import settings
 import socerr
 
-OPT_SHORT = 'h'
-OPT_LONG = ['debug', 'info']
+OPT_SHORT = 'ha:p:n:e:'
+OPT_LONG = ['help', 'adress=', 'port=', 'nb=', 'debug', 'info', 'errors=']
+
 
 def printHelp():
     print "—  -h /--help : afficher l'aide"
+    print "—  -p / --port : Choisir le port utilisé"
+    print "—  -a / --adress : Choisir l'adresse utilisée"
+    print "—  -n / --nb : Choisir le nombre de réémission avant abandon"
+    print "—  -e / --errors : Choisir le taux d'erreurs"
     print "—  --info : afficher les logs"
     print "—  --debug : afficher les trames"
+
 
 os.system('cls||clear')
 
@@ -27,7 +33,7 @@ try:
 except getopt.GetoptError as err:
     print "Les options ne sont pas correctes : "
     printHelp()
-    sys.exit(2)
+    sys.exit()
 for opt, arg in opts:
     if opt in ('-h', '--help'):
         printHelp()
@@ -36,10 +42,21 @@ for opt, arg in opts:
         settings.INFO = True
     elif opt in ('', '--debug'):
         settings.DEBUG = True
+    elif opt in ('-a', '--adress'):
+        settings.HOST = arg
+    elif opt in ('-n', '--nb'):
+        settings.TRY_MAX = int(arg)
+    elif opt in ('-p', '--port'):
+        settings.PORT = arg
+    elif opt in ('-e', '--errors'):
+        settings.ERROR_RATE = int(arg)
+    
 
 POWER_ON = True
 current_id = 0
 
+if settings.INFO:
+    print "Taux d'erreurs : " + str(settings.ERROR_RATE)
 s = socerr.socerr(socket.AF_INET, socket.SOCK_DGRAM, settings.ERROR_RATE)
 s.bind((settings.HOST, settings.PORT))
 

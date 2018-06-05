@@ -42,14 +42,15 @@ def connectionAnswer(socket, adress, username, id_server):
     if not is_exist and len(settings.CLIENTS_CONNECTED) == settings.MAX_CLIENTS:
         buf = frame_manager.encode_frame(id_server, 0, "server", 0, 1, 2, 2, "")
         frame_manager.send_frame_without_ack(socket, adress, buf)
-        return
+        return frame_manager.incremente_id(id_server)
 
     if not is_exist:
         for client in settings.CLIENTS_CONNECTED:  # Verify the username is not used
             if username == client["username"]:
                 buf = frame_manager.encode_frame(
                     id_server, 0, "server", 0, 1, 2, 1, "")
-                frame_manager.send_frame_without_ack(socket, adress, buf)
+                socket.sendto(buf, adress)                
+                return frame_manager.incremente_id(id_server)
 
     #mutex.acquire()
     #try:
