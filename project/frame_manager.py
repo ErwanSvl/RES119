@@ -11,13 +11,13 @@ from Timer import Timer
 
 def encode_frame(_id, _type, username, zone, state, ack_state, error_state, data):
     """ Return the buffer encoded """
-# concat id and type
+    # concat id and type
     idtype = (_id << 1) + _type
-# concat state, ack_state, error_state
+    # concat state, ack_state, error_state
     state_ackSt_ackEr = (state << 6) + (ack_state << 4) + error_state
-# create the buffer
+    # create the buffer
     buf = ctypes.create_string_buffer(15 + len(data))
-# fill the buffer, the data length is variable
+    # fill the buffer, the data length is variable
     struct.pack_into('H10sHB' + str(len(data)) + 's', buf, 0,
                      idtype, username, zone, state_ackSt_ackEr, data)
     return buf
@@ -28,13 +28,19 @@ def send_frame(socket, adress, buf):
     # send the buffer
     for client in settings.CLIENTS_CONNECTED:
         if client["adress"] == adress:
-            # There is already a waiting ack
-            if client["timer"] != None and client["timer"].is_working:
-                print "Already waiting an ack, add to the buffer"
-                client["wait_msg"].append(buf)
-            else:  # Send the frame and init the timer
+            # No waiting ack
+            if (client["timer"] == None or not client["timer"].is_working) and len(client["wait_msg"]) == 0:
+                if settings.INFO:
+                    print "Envoie du message et démarrage du timer pour " + \
+                        client["username"]
                 socket.sendto(buf, adress)
                 wait_ack(adress, socket, buf)
+            else:  # Waiting ack : add to buffer
+                if settings.INFO:
+                    print "On attend déjà un ACK, ajout de la trame au buffer"
+                client["wait_msg"].append(buf)
+                if settings.INFO:
+                    print_buffer()
             return
 
 
@@ -44,11 +50,14 @@ def send_frame_without_ack(socket, adress, buf):
     for client in settings.CLIENTS_CONNECTED:
         if client["adress"] == adress:
             # There is already a waiting ack
-            if client["timer"] != None and client["timer"].is_working:
-                print "Already waiting an ack, add to the buffer"
-                client["wait_msg"].append(buf)
-            else:  # Send the frame and init the timer
+            if (client["timer"] == None or not client["timer"].is_working) and len(client["wait_msg"]) == 0:
                 socket.sendto(buf, adress)
+            else:  # Send the frame and init the timer
+                if settings.INFO:
+                    print "On attend déjà un ACK, ajout de la trame au buffer"
+                client["wait_msg"].append(buf)
+                if settings.INFO:
+                    print_buffer()
             return
 
 
@@ -61,7 +70,6 @@ def send_frame_public(socket, adress, buf, id_server):
                                    frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
         if user["adress"] != adress:
             send_frame(socket, user["adress"], updated_buf)
-            print "init timer for " + user["username"]
             id_server = incremente_id(id_server)
     return id_server
 
@@ -116,7 +124,8 @@ def incremente_id(ID):
 def send_ack(adress, socket, frame):
     buf = encode_frame(frame["id"], 1, "", 0, 0, 0, 0, "")
     socket.sendto(buf, adress)
-    print "Sending Ack to " + frame["username"]
+    if settings.INFO:
+        print "Envoie un ACK à " + frame["username"]
 
 
 def wait_ack(adress, socket, buf):
@@ -130,13 +139,33 @@ def wait_ack(adress, socket, buf):
 
 
 def defuseTimer(socket, adress):
-    print "Receiving Ack, defuse timer"
+    if settings.INFO:
+        print "ACK reçu, timer désarmé"
     for client in settings.CLIENTS_CONNECTED:
         if client["adress"] == adress:
             client["stop_flag"].set()
             if len(client["wait_msg"]) > 0:
+                if settings.INFO:
+                    print "Envoie d'un message en attente"
+                    print_buffer()
                 # Take off the first frame of the table
-                frame = client["wait_msg"].pop(0)
-                buf = encode_frame(frame["id"], frame["type"], frame["username"], frame["zone"],
-                                   frame["state"], frame["ack_state"], frame["error_state"], frame["data"])
-                send_frame(socket, adress, buf)
+                buf = client["wait_msg"].pop(0)
+                socket.sendto(buf, adress)
+                wait_ack(adress, socket, buf)
+
+
+def print_buffer():
+    for client in settings.CLIENTS_CONNECTED:
+        print "\n"+str(client["username"])+" : ["
+        for buf in client["wait_msg"]:
+            frame = decode_frame(buf)
+            print "data : "+str(frame["data"])+"/ id : "+str(frame["id"])
+        print "]\n"
+
+def send_list(socket, adress, id_server):
+    message = ""
+    for client in settings.CLIENTS_CONNECTED:
+        message += client["username"] + ":public "
+    buf = encode_frame(id_server, 0, "server", 0, 0, 0, 0, message)
+    send_frame(socket, adress, buf)
+    return incremente_id(id_server)

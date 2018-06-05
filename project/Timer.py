@@ -20,13 +20,14 @@ class Timer(Thread):
     def run(self):
 
         while not self.stopped.wait(self.duration) and self.nb_try < self.try_max:
-            print "Ack missing, reemit message for the " + str(self.nb_try) + " times"
+            if settings.INFO:
+                print "ACK perdu, reemission pour la " + str(self.nb_try) + " fois"
             self.socket.sendto(self.buf, self.adress)
             self.nb_try += 1
         if self.nb_try >= self.try_max: # Too much retry, give up
             connection.removeClient(self.adress)
-            print "Error : server injoingnable, appuyez sur entrer pour quitter"
-            settings.POWER_ON = False
+            print "Error : destinaire injoingnable, abandon"
+            settings.POWER_ON = False # Diffuse the main loop
         self.is_working = False
 
 

@@ -1,12 +1,41 @@
 # -*- coding:utf-8 -*-
-import ctypes
-import struct
 import argparse
+import ctypes
+import getopt
+import os
 import socket
-import socerr
-import frame_manager
+import struct
+import sys
+
 import connection
+import frame_manager
 import settings
+import socerr
+
+OPT_SHORT = 'h'
+OPT_LONG = ['debug', 'info']
+
+def printHelp():
+    print "—  -h /--help : afficher l'aide"
+    print "—  --info : afficher les logs"
+    print "—  --debug : afficher les trames"
+
+os.system('cls||clear')
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], OPT_SHORT, OPT_LONG)
+except getopt.GetoptError as err:
+    print "Les options ne sont pas correctes : "
+    printHelp()
+    sys.exit(2)
+for opt, arg in opts:
+    if opt in ('-h', '--help'):
+        printHelp()
+        sys.exit()
+    elif opt in ('', '--info'):
+        settings.INFO = True
+    elif opt in ('', '--debug'):
+        settings.DEBUG = True
 
 POWER_ON = True
 current_id = 0
@@ -17,7 +46,8 @@ s.bind((settings.HOST, settings.PORT))
 while POWER_ON:
     buf, adress = s.recvfrom(settings.FRAME_LENGTH)
     frame = frame_manager.decode_frame(buf)
-    frame_manager.print_frame(frame)
+    if settings.DEBUG:
+        frame_manager.print_frame(frame)
     if frame["type"] == 0:  # Data frame
         if frame["zone"] == 0:  # Public canal
             if frame["state"] == 0:  # Default (Message)
@@ -26,7 +56,7 @@ while POWER_ON:
                         frame_manager.send_ack(adress, s, frame)
                         # if the ID is the same : this message is a reemission
                         if client["id"] != frame["id"]:
-                            client["id"] = frame["id"]
+                            client["id"] = frame["id"]  # Update the client ID
                             current_id = frame_manager.send_frame_public(
                                 s, adress, buf, current_id)
             elif frame["state"] == 1:  # Connection
@@ -36,14 +66,21 @@ while POWER_ON:
                 current_id = connection.deconnectionAnswer(
                     s, adress, frame["username"], frame["id"], current_id)
             elif frame["state"] == 3:  # Server command
-                print "Not implemented yet"
+                if frame["data"] == "who":
+                    frame_manager.send_ack(adress, s, frame)
+                    current_id = frame_manager.send_list(s, adress, current_id)
+                else:
+                    if settings.INFO:
+                        print "Cette commande n'est pas géré par le serveur"
             else:  # Bad entry
-                print "Bad Entry"
+                if settings.INFO:
+                    print "Bad Entry"
         elif frame["zone"] == 1:  # Centralized private canal
             print "Not implemented yet"
         elif frame["zone"] == 2:  # Decentralized private canal
             print "Not implemented yet"
         else:  # Bad entry zone parameter
-            print "Bad Entry"
+            if settings.INFO:
+                print "Bad Entry"
     else:  # Ack frame
-        frame_manager.defuseTimer(socket, adress)
+        frame_manager.defuseTimer(s, adress)

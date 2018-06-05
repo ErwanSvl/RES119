@@ -15,3 +15,7 @@ POWER_ON = True
 ERROR_RATE = 20
 
 COMMANDS = []
+
+# Log variables
+DEBUG = False
+INFO = False

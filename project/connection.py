@@ -7,7 +7,7 @@ import frame_manager
 import settings
 import threading
 
-mutex = threading.Lock()
+#mutex = threading.Lock()
 
 
 def connectionRequest(socket, adress, _id):
@@ -31,7 +31,7 @@ def connectionRequest(socket, adress, _id):
     return usernameNoSpace
 
 
-def connectionAnswer(socket, adress, username, _id):
+def connectionAnswer(socket, adress, username, id_server):
 
     is_exist = False
     for client in settings.CLIENTS_CONNECTED:
@@ -40,7 +40,7 @@ def connectionAnswer(socket, adress, username, _id):
 
     # Number max is reached
     if not is_exist and len(settings.CLIENTS_CONNECTED) == settings.MAX_CLIENTS:
-        buf = frame_manager.encode_frame(_id, 0, "server", 0, 1, 2, 2, "")
+        buf = frame_manager.encode_frame(id_server, 0, "server", 0, 1, 2, 2, "")
         frame_manager.send_frame_without_ack(socket, adress, buf)
         return
 
@@ -48,17 +48,16 @@ def connectionAnswer(socket, adress, username, _id):
         for client in settings.CLIENTS_CONNECTED:  # Verify the username is not used
             if username == client["username"]:
                 buf = frame_manager.encode_frame(
-                    _id, 0, "server", 0, 1, 2, 1, "")
+                    id_server, 0, "server", 0, 1, 2, 1, "")
                 frame_manager.send_frame_without_ack(socket, adress, buf)
-                return
 
-    mutex.acquire()
-    try:
+    #mutex.acquire()
+    #try:
         if not is_exist:
             new_client = {}
             new_client["username"] = username
             new_client["adress"] = adress
-            new_client["id"] = _id
+            new_client["id"] = id_server
             new_client["timer"] = None
             new_client["stop_flag"] = None
             new_client["nb_try"] = 0
@@ -66,15 +65,24 @@ def connectionAnswer(socket, adress, username, _id):
 
             settings.CLIENTS_CONNECTED.append(
                 new_client)  # This is a new client
-    finally:
-        mutex.release()
+    #finally:
+        #mutex.release()
 
-    buf = frame_manager.encode_frame(_id, 0, "server", 0, 1, 1, 0, "")
+    # Send a message to the other client in the channel
+    msg = "L'utilisateur " + username + " s'est connecté"
+    msg_buf = frame_manager.encode_frame(
+        id_server, 0, "server", 0, 0, 0, 0, msg)
+    id_server = frame_manager.send_frame_public(
+        socket, adress, msg_buf, id_server)
+
+    buf = frame_manager.encode_frame(id_server, 0, "server", 0, 1, 1, 0, "")
     frame_manager.send_frame_without_ack(socket, adress, buf)
 
+    return id_server
 
 def deconnectionAnswer(socket, adress, username, id_client, id_server):
-    print "Send deconnection answer"
+    if settings.INFO:
+        print "Envoie la réponse à la demande de déconnexion"
     for client in settings.CLIENTS_CONNECTED:  # Search and remove the client which want to disconnect
         if adress == client["adress"]:
             removeClient(adress)
@@ -88,15 +96,15 @@ def deconnectionAnswer(socket, adress, username, id_client, id_server):
 
     buf = frame_manager.encode_frame(
     id_client, 0, "server", 0, 2, 1, 0, "")
-    frame_manager.send_frame_without_ack(socket, adress, buf)
+    socket.sendto(buf, adress)
     return id_server
 
 
 def removeClient(adress):
-    mutex.acquire()
-    try:
+    #mutex.acquire()
+    #try:
         for client in settings.CLIENTS_CONNECTED:  # Search and remove the client which want to disconnect
             if adress == client["adress"]:
                 settings.CLIENTS_CONNECTED.remove(client)
-    finally:
-        mutex.release()
+    #finally:
+        #mutex.release()
