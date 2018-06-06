@@ -84,8 +84,12 @@ while POWER_ON:
                     s, adress, frame["username"], frame["id"], current_id)
             elif frame["state"] == 3:  # Server command
                 if frame["data"] == "who":
-                    frame_manager.send_ack(adress, s, frame)
-                    current_id = frame_manager.send_list(s, adress, current_id)
+                    for client in settings.CLIENTS_CONNECTED:
+                        if client["adress"] == adress:  # Find the sender
+                            frame_manager.send_ack(adress, s, frame)
+                            if client["id"] != frame["id"]:
+                                client["id"] = frame["id"]  # Update the client ID
+                                current_id = frame_manager.send_list(s, adress, current_id)
                 else:
                     if settings.INFO:
                         print "Cette commande n'est pas géré par le serveur"
